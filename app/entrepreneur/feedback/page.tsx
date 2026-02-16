@@ -6,6 +6,7 @@ import { sanityClient } from "@/lib/sanityClient";
 import { useEffect, useState } from "react";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { motion } from "framer-motion";
+import toast from "react-hot-toast";
 
 export default function EntrepreneurFeedbackPage() {
   const { data: session, status } = useSession();
@@ -14,41 +15,52 @@ export default function EntrepreneurFeedbackPage() {
   const [feedbacks, setFeedbacks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const email = session?.user?.email; // ✅ safe extraction
+  // ✅ TS Safe Email Extraction
+  const userEmail = session?.user?.email;
 
-    if (!email) return;
+  useEffect(() => {
+    if (!userEmail) return;
 
     const fetchFeedback = async () => {
       try {
-        // 1️⃣ Fetch entrepreneur startups
-        const startups: string[] = await sanityClient.fetch(
+        // ✅ Step 1 — Get entrepreneur startups
+        const startupIds: string[] = await sanityClient.fetch(
           `*[_type=="startup" && entrepreneur_id==$email]._id`,
-          { email }
+          { email: userEmail }
         );
 
-        // 2️⃣ Fetch feedback for those startups
+        // ✅ If no startups → stop early
+        if (!startupIds || startupIds.length === 0) {
+          setFeedbacks([]);
+          return;
+        }
+
+        // ✅ Step 2 — Get feedback of those startups
         const feedbackData = await sanityClient.fetch(
           `*[_type=="feedback" && startup_id in $startupIds] | order(date desc)`,
-          { startupIds: startups }
+          { startupIds }
         );
 
         setFeedbacks(feedbackData);
-      } catch (err) {
-        console.error(err);
+
+      } catch (error) {
+        console.error(error);
+        toast.error("Failed to load feedback");
       } finally {
         setLoading(false);
       }
     };
 
     fetchFeedback();
-  }, [session]);
+  }, [userEmail]);
 
+  // ✅ Loading Screen
   if (status === "loading" || loading) {
     return <LoadingSpinner text="Loading feedback..." />;
   }
 
-  if (!session) {
+  // ✅ Not logged in
+  if (!userEmail) {
     router.replace("/auth/login");
     return null;
   }
@@ -65,7 +77,9 @@ export default function EntrepreneurFeedbackPage() {
         </h1>
 
         {feedbacks.length === 0 ? (
-          <p className="text-gray-400">No feedback received yet.</p>
+          <p className="text-gray-400">
+            No feedback received yet.
+          </p>
         ) : (
           <div className="space-y-6">
             {feedbacks.map((fb) => (
