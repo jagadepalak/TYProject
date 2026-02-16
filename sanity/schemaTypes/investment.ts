@@ -53,7 +53,18 @@ export default {
   title: "Rejected At",
   type: "datetime",
 },
+{
+  name: "resubmit_count",
+  title: "Resubmit Count",
+  type: "number",
+  initialValue: 0,
+},
 
-
+{
+  name: "max_resubmit",
+  title: "Max Resubmit Limit",
+  type: "number",
+  initialValue: 2,
+},
   ],
 };
