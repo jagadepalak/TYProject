@@ -2,25 +2,28 @@ import { sanityWriteClient } from "@/lib/sanityClient";
 
 export async function POST(req: Request) {
   try {
-    const { message, startupId, investorEmail } = await req.json();
+    const { feedback_text, startup_id, investor_email } = await req.json();
 
-    if (!message || !startupId || !investorEmail) {
+    // ✅ Validation
+    if (!feedback_text || !startup_id || !investor_email) {
       return new Response("Missing fields", { status: 400 });
     }
 
+    // ✅ Save Feedback (Schema Matching)
     await sanityWriteClient.create({
       _type: "feedback",
-      message,
-      investor_email: investorEmail,
-      startup: {
-        _type: "reference",
-        _ref: startupId,
-      },
-      createdAt: new Date().toISOString(),
+
+      feedback_text,
+      startup_id,
+      investor_email,
+
+      date: new Date().toISOString(),
     });
 
-    return new Response("Feedback saved", { status: 200 });
+    return new Response("Feedback saved successfully", { status: 200 });
+
   } catch (error) {
+    console.error("Feedback API Error:", error);
     return new Response("Server error", { status: 500 });
   }
 }
