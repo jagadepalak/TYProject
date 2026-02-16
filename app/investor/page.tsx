@@ -15,29 +15,47 @@ export default function InvestorPage() {
   const [startups, setStartups] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const userEmail = session?.user?.email;
+
   useEffect(() => {
-    if (!session?.user?.email) return;
+    if (!userEmail) return;
 
-    // Fetch only APPROVED startups
-    sanityClient
-      .fetch(`*[_type=="startup" && status=="Approved"] | order(_createdAt desc)`)
-      .then((data) => {
+    const fetchData = async () => {
+      try {
+        // ✅ Fetch user role
+        const user = await sanityClient.fetch(
+          `*[_type=="user" && email==$email][0]`,
+          { email: userEmail }
+        );
+
+        // ❌ BLOCK ADMIN + ENTREPRENEUR
+        if (!user || user.role !== "investor") {
+          toast.error("Only investors can access this page");
+          router.replace("/dashboard");
+          return;
+        }
+
+        // ✅ Fetch approved startups
+        const data = await sanityClient.fetch(
+          `*[_type=="startup" && status=="Approved"] | order(_createdAt desc)`
+        );
+
         setStartups(data);
-        setLoading(false);
-      })
-      .catch(() => {
+      } catch {
         toast.error("Failed to load startups");
+      } finally {
         setLoading(false);
-      });
-  }, [session]);
+      }
+    };
 
-  // Loading
+    fetchData();
+  }, [userEmail, router]);
+
   if (status === "loading" || loading) {
     return <LoadingSpinner text="Loading approved startups..." />;
   }
 
-  // Not logged in
-  if (!session) {
+  if (!userEmail) {
     router.replace("/auth/login");
     return null;
   }
@@ -50,7 +68,6 @@ export default function InvestorPage() {
     >
       <div className="max-w-6xl mx-auto">
 
-        {/* Header */}
         <div className="flex justify-between items-center mb-10">
           <h1 className="text-3xl font-bold">Browse Startups</h1>
 
@@ -84,21 +101,23 @@ export default function InvestorPage() {
                   Industry: {startup.industry || "N/A"}
                 </p>
 
-
                 <button
                   onClick={() =>
                     router.push(`/investor/invest/${startup._id}`)
                   }
-                  className="w-full bg-green-600 hover:bg-green-700 py-2 rounded-lg font-semibold"
+                  className="w-full bg-green-600 hover:bg-green-700 py-2 rounded-lg font-semibold mb-2"
                 >
                   Invest
                 </button>
+
                 <button
-  onClick={() => router.push(`/investor/feedback/${startup._id}`)}
-  className="bg-indigo-600 px-4 py-2 rounded"
->
-  Give Feedback
-</button>
+                  onClick={() =>
+                    router.push(`/investor/feedback/${startup._id}`)
+                  }
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 py-2 rounded-lg font-semibold"
+                >
+                  Give Feedback
+                </button>
 
               </motion.div>
             ))}
