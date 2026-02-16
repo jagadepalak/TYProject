@@ -11,36 +11,51 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+
   const [role, setRole] = useState<string | null>(null);
+  const [loadingRole, setLoadingRole] = useState(true);
+
+  // ✅ Extract email safely (TS SAFE)
+  const userEmail = session?.user?.email;
 
   useEffect(() => {
     if (status === "loading") return;
 
-    if (!session?.user?.email) {
+    if (!userEmail) {
       router.replace("/auth/login");
       return;
     }
 
-    sanityClient
-      .fetch(`*[_type == "user" && email == $email][0]`, {
-        email: session.user.email,
-      })
-      .then((user) => {
+    const fetchRole = async () => {
+      try {
+        const user = await sanityClient.fetch(
+          `*[_type == "user" && email == $email][0]`,
+          { email: userEmail }
+        );
+
         if (!user) {
           router.replace("/auth/login");
-        } else if (!user.role) {
-          router.replace("/select-role");
-        } else {
-          setRole(user.role);
+          return;
         }
-      })
-      .catch(() => {
-        router.replace("/auth/login");
-      });
-  }, [session, status, router]);
 
-  // 🔄 Proper loading screen
-  if (status === "loading" || role === null) {
+        if (!user.role) {
+          router.replace("/select-role");
+          return;
+        }
+
+        setRole(user.role);
+      } catch {
+        router.replace("/auth/login");
+      } finally {
+        setLoadingRole(false);
+      }
+    };
+
+    fetchRole();
+  }, [userEmail, status, router]);
+
+  // ✅ Loading screen
+  if (status === "loading" || loadingRole || !role) {
     return <LoadingSpinner text="Loading dashboard..." />;
   }
 
@@ -63,33 +78,35 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        {/* Role-based cards */}
+        {/* Role Based Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 
+          {/* 👑 ADMIN */}
           {role === "admin" && (
             <>
               <Card title="Manage Users" href="/admin/users" />
               <Card title="Approve Startups" href="/admin/startups" />
-              <Card title="Reports" href="/admin/reports" />
               <Card title="Approve Investments" href="/admin/investments" />
+              <Card title="Reports" href="/admin/reports" />
               <Card title="View Feedback" href="/admin/feedback" />
-
             </>
           )}
 
+          {/* 🚀 ENTREPRENEUR */}
           {role === "entrepreneur" && (
             <>
               <Card title="Submit Startup" href="/startup/submit" />
               <Card title="My Startups" href="/startup/list" />
-              <Card title="View Feedback" href="/entrepreneur/feedback"/>
+              <Card title="Investments Received" href="/entrepreneur/investments" />
+              <Card title="View Feedback" href="/entrepreneur/feedback" />
             </>
           )}
 
+          {/* 💰 INVESTOR */}
           {role === "investor" && (
             <>
               <Card title="Browse Startups" href="/investor/startups" />
               <Card title="My Investments" href="/investor/investments" />
-              <Card title="Investments Received" href="/entrepreneur/investments" />
             </>
           )}
 
@@ -99,11 +116,12 @@ export default function DashboardPage() {
   );
 }
 
+/* ✅ CARD COMPONENT */
 function Card({ title, href }: { title: string; href: string }) {
   return (
     <Link
       href={href}
-      className="bg-gray-800 p-6 rounded-xl shadow hover:shadow-2xl transition"
+      className="bg-gray-800 p-6 rounded-xl shadow hover:shadow-2xl transition hover:scale-[1.02]"
     >
       <h2 className="text-xl font-bold">{title}</h2>
       <p className="text-gray-400 mt-2">Click to continue</p>
