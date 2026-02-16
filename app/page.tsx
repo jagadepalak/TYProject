@@ -119,6 +119,33 @@ export default function LandingPage() {
           ))}
         </motion.section>
 
+        {/* ⭐ YOUR DETAILS FOOTER */}
+        <footer className="mt-32 border-t border-gray-800 py-10 text-center">
+          <h3 className="text-xl font-semibold text-indigo-400">
+            Developed By
+          </h3>
+
+          <p className="mt-2 text-lg font-medium">
+            Palak Jagade
+          </p>
+
+          <p className="text-gray-400 text-sm mt-1">
+            TY BSc IT — D.G. Ruparel College
+          </p>
+
+          <p className="text-gray-500 text-sm">
+            Mumbai University
+          </p>
+
+          <p className="text-gray-400 text-sm mt-3">
+            📧 jagadepalak@gmail.com
+          </p>
+
+          <p className="text-gray-500 text-xs mt-4">
+            Startup Pitching Platform — Final Year Project
+          </p>
+        </footer>
+
       </div>
     </div>
   );
