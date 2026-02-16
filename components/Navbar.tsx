@@ -1,12 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
+import { sanityClient } from "@/lib/sanityClient";
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { status } = useSession();
+  const router = useRouter();
+  const { data: session, status } = useSession();
+
+  const [role, setRole] = useState<string | null>(null);
+
   const isLoggedIn = status === "authenticated";
 
   // ❌ Hide navbar on auth pages
@@ -22,6 +28,18 @@ export default function Navbar() {
         ? "bg-indigo-600 text-white"
         : "text-gray-300 hover:bg-gray-700"
     }`;
+
+  // ✅ Fetch user role
+  useEffect(() => {
+    if (!session?.user?.email) return;
+
+    sanityClient
+      .fetch(`*[_type=="user" && email==$email][0].role`, {
+        email: session.user.email,
+      })
+      .then(setRole)
+      .catch(() => setRole(null));
+  }, [session]);
 
   return (
     <nav className="w-full bg-gray-900 px-8 py-4 flex justify-between items-center animate-fade-in">
@@ -44,7 +62,7 @@ export default function Navbar() {
       {/* RIGHT MENU */}
       <div className="flex items-center gap-3">
 
-        {/* LANDING PAGE → PUBLIC */}
+        {/* LANDING PAGE */}
         {isLandingPage && (
           <>
             <Link href="/auth/login" className={linkClass("/auth/login")}>
@@ -59,18 +77,32 @@ export default function Navbar() {
           </>
         )}
 
-        {/* DASHBOARD & OTHER PAGES */}
+        {/* LOGGED IN MENU */}
         {!isLandingPage && isLoggedIn && (
           <>
             <Link href="/dashboard" className={linkClass("/dashboard")}>
               Dashboard
             </Link>
-            <Link href="/investor" className={linkClass("/investor")}>
-              Investors
-            </Link>
+
+            {/* ✅ Investor Only */}
+            {role === "investor" && (
+              <Link href="/investor" className={linkClass("/investor")}>
+                Browse Startups
+              </Link>
+            )}
+
+            {/* ✅ Entrepreneur Only */}
+            {role === "entrepreneur" && (
+              <Link href="/startup/list" className={linkClass("/startup/list")}>
+                My Pitches
+              </Link>
+            )}
+
+            {/* ✅ Everyone */}
             <Link href="/profile" className={linkClass("/profile")}>
               Profile
             </Link>
+
             <button
               onClick={() => signOut({ callbackUrl: "/" })}
               className="ml-2 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-white transition"
