@@ -32,21 +32,26 @@ export default function AdminInvestmentsPage() {
         }
       });
 
-    // ✅ FETCH INVESTMENTS WITH STARTUP DETAILS
+    // ✅ FETCH INVESTMENTS WITH SNAPSHOT DATA
     sanityClient
       .fetch(
-        `*[_type=="investment"] | order(_createdAt desc){
+        `*[_type=="investment"] | order(created_at desc){
           _id,
           amount,
           status,
           investorEmail,
-          startupName,
-          startupId,
-          entrepreneurEmail,
+
+          // ⭐ SNAPSHOT FIELDS
+          startup_name,
+          startup_industry,
+          entrepreneur_email,
+
           rejection_reason,
           rejected_by,
           rejected_at,
-          _createdAt
+          resubmit_count,
+          max_resubmit,
+          created_at
         }`
       )
       .then(setInvestments);
@@ -94,7 +99,6 @@ export default function AdminInvestmentsPage() {
       body: JSON.stringify({
         id: rejectId,
         reason: rejectReason,
-        adminEmail,
       }),
     });
 
@@ -135,14 +139,20 @@ export default function AdminInvestmentsPage() {
             className="bg-gray-800 p-5 rounded-xl flex justify-between items-center"
           >
             <div>
-              {/* ✅ STARTUP DETAILS */}
+              {/* ⭐ STARTUP SNAPSHOT DETAILS */}
               <p className="font-semibold text-lg">
-                {inv.startupName || "Startup"}
+                {inv.startup_name || "Startup"}
               </p>
 
-              {inv.entrepreneurEmail && (
+              {inv.startup_industry && (
                 <p className="text-xs text-gray-500">
-                  Entrepreneur: {inv.entrepreneurEmail}
+                  Industry: {inv.startup_industry}
+                </p>
+              )}
+
+              {inv.entrepreneur_email && (
+                <p className="text-xs text-gray-500">
+                  Entrepreneur: {inv.entrepreneur_email}
                 </p>
               )}
 
@@ -167,12 +177,17 @@ export default function AdminInvestmentsPage() {
                 {inv.status}
               </span>
 
-              {/* ⭐ Show Rejection Details */}
+              {/* ⭐ Rejection Info */}
               {inv.status === "Rejected" && inv.rejection_reason && (
                 <div className="mt-2 text-sm text-red-400">
                   Reason: {inv.rejection_reason}
                 </div>
               )}
+
+              {/* ⭐ Resubmit Tracking (Admin View) */}
+              <p className="text-xs text-gray-500 mt-2">
+                Resubmits: {inv.resubmit_count || 0} / {inv.max_resubmit || 2}
+              </p>
             </div>
 
             {/* ⭐ ACTION BUTTONS */}
