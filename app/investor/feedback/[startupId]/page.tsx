@@ -13,18 +13,17 @@ export default function SubmitFeedbackPage() {
   const params = useParams();
 
   const startupId = params.startupId as string;
-
-  const investorEmail = session?.user?.email; // ✅ SAFE extraction
+  const investorEmail = session?.user?.email;
 
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // 🔄 Loading
+  // Loading
   if (status === "loading") {
     return <LoadingSpinner text="Preparing feedback..." />;
   }
 
-  // 🔐 Not logged in
+  // Not logged in
   if (!session || !investorEmail) {
     router.replace("/auth/login");
     return null;
@@ -42,9 +41,9 @@ export default function SubmitFeedbackPage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        feedback_text: message,
-        startup_id: startupId,
-        investor_email: investorEmail, // ✅ SAFE usage
+        message: message,              // ✅ FIXED
+        startupId: startupId,          // ✅ FIXED
+        investorEmail: investorEmail,  // ✅ FIXED
       }),
     });
 
