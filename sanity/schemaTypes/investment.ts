@@ -4,6 +4,7 @@ export default {
   type: "document",
   fields: [
 
+    // ⭐ Reference to Startup (Main relation)
     {
       name: "startup",
       title: "Startup",
@@ -12,6 +13,26 @@ export default {
       validation: (Rule: any) => Rule.required(),
     },
 
+    // ⭐ Snapshot fields (FAST UI + REPORTING)
+    {
+      name: "startup_name",
+      title: "Startup Name Snapshot",
+      type: "string",
+    },
+
+    {
+      name: "startup_industry",
+      title: "Startup Industry Snapshot",
+      type: "string",
+    },
+
+    {
+      name: "entrepreneur_email",
+      title: "Entrepreneur Email Snapshot",
+      type: "string",
+    },
+
+    // ⭐ Investor Info
     {
       name: "investorEmail",
       title: "Investor Email",
@@ -19,6 +40,7 @@ export default {
       validation: (Rule: any) => Rule.required(),
     },
 
+    // ⭐ Investment Details
     {
       name: "amount",
       title: "Investment Amount",
@@ -33,6 +55,7 @@ export default {
       validation: (Rule: any) => Rule.max(500),
     },
 
+    // ⭐ Status
     {
       name: "status",
       title: "Status",
@@ -43,6 +66,7 @@ export default {
       initialValue: "Pending",
     },
 
+    // ⭐ Rejection Tracking
     {
       name: "rejection_reason",
       title: "Rejection Reason",
@@ -61,6 +85,7 @@ export default {
       type: "datetime",
     },
 
+    // ⭐ Resubmit Control
     {
       name: "resubmit_count",
       title: "Resubmit Count",
@@ -75,12 +100,12 @@ export default {
       initialValue: 2,
     },
 
+    // ⭐ Created Date
     {
       name: "created_at",
       title: "Created At",
       type: "datetime",
       initialValue: () => new Date().toISOString(),
     },
-
   ],
 };
