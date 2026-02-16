@@ -9,7 +9,7 @@ export async function POST(req: Request) {
       return new Response("Invalid data", { status: 400 });
     }
 
-    // ⭐ STEP 1 — Fetch Startup Details (for snapshot)
+    // ⭐ Fetch Startup Details (Snapshot)
     const startup = await sanityWriteClient.fetch(
       `*[_type=="startup" && _id==$id][0]{
         startup_name,
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
       return new Response("Startup not found", { status: 404 });
     }
 
-    // ⭐ STEP 2 — Create Investment WITH SNAPSHOT DATA
+    // ⭐ Create Investment WITH SNAPSHOT DATA
     await sanityWriteClient.create({
       _type: "investment",
 
@@ -33,12 +33,12 @@ export async function POST(req: Request) {
         _ref: startupId,
       },
 
-      // Snapshot fields (VERY IMPORTANT)
-      startup_name: startup.startup_name,
-      startup_industry: startup.industry,
-      entrepreneur_email: startup.entrepreneur_id,
+      // ✅ SNAPSHOT FIELDS (MATCH ADMIN UI)
+      startupName: startup.startup_name,
+      startupIndustry: startup.industry,
+      entrepreneurEmail: startup.entrepreneur_id,
 
-      // Investment data
+      // Investment Data
       investorEmail,
       amount: Number(amount),
       message: message || "",
