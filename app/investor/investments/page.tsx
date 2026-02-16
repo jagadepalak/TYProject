@@ -15,7 +15,7 @@ export default function InvestorInvestmentsPage() {
   const [investments, setInvestments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // ✅ Extract email safely (TS safe)
+  // ✅ Extract email safely
   const userEmail = session?.user?.email;
 
   useEffect(() => {
@@ -59,34 +59,6 @@ export default function InvestorInvestmentsPage() {
     router.replace("/auth/login");
     return null;
   }
-
-  // 🔁 Resubmit Investment (simple demo flow)
-  const resubmitInvestment = async (inv: any) => {
-    try {
-      const res = await fetch("/api/investment/resubmit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          investmentId: inv._id,
-        }),
-      });
-
-      if (res.ok) {
-        toast.success("Investment resubmitted successfully 🔁");
-
-        // Refresh list
-        setInvestments((prev) =>
-          prev.map((i) =>
-            i._id === inv._id ? { ...i, status: "Pending" } : i
-          )
-        );
-      } else {
-        toast.error("Failed to resubmit investment");
-      }
-    } catch {
-      toast.error("Error resubmitting investment");
-    }
-  };
 
   return (
     <motion.div
@@ -169,13 +141,10 @@ export default function InvestorInvestmentsPage() {
                       </p>
                     )}
 
-                    {/* 🔁 RESUBMIT BUTTON */}
-                    <button
-                      onClick={() => resubmitInvestment(inv)}
-                      className="mt-3 bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded"
-                    >
-                      Resubmit Investment
-                    </button>
+                    {/* Optional message */}
+                    <p className="text-xs text-gray-500 mt-2">
+                      You can create a new investment request if interested again.
+                    </p>
                   </div>
                 )}
               </motion.div>
