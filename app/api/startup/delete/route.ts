@@ -4,7 +4,6 @@ import { authOptions } from "@/auth";
 
 export async function POST(req: Request) {
   try {
-    // ⭐ GET USER FROM SESSION (NOT FROM FRONTEND)
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.email) {
@@ -14,10 +13,10 @@ export async function POST(req: Request) {
     const { id } = await req.json();
 
     if (!id) {
-      return new Response("Startup ID required", { status: 400 });
+      return new Response("Invalid request", { status: 400 });
     }
 
-    // ⭐ Fetch startup
+    // ✅ Fetch startup
     const startup = await sanityWriteClient.fetch(
       `*[_type=="startup" && _id==$id][0]`,
       { id }
@@ -27,17 +26,20 @@ export async function POST(req: Request) {
       return new Response("Startup not found", { status: 404 });
     }
 
-    // ⭐ SECURITY CHECK — ONLY OWNER CAN DELETE
+    // ✅ Security check
     if (startup.entrepreneur_id !== session.user.email) {
       return new Response("Unauthorized", { status: 403 });
     }
 
-    // ⭐ ONLY PENDING CAN BE DELETED
+    // ✅ Only Pending startups can be deleted
     if (startup.status !== "Pending") {
-      return new Response("Cannot delete non-pending startup", { status: 403 });
+      return new Response(
+        "Cannot delete approved or rejected startup",
+        { status: 403 }
+      );
     }
 
-    // ⭐ DELETE
+    // ✅ Delete
     await sanityWriteClient.delete(id);
 
     return new Response("Startup deleted successfully");
